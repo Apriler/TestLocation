@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mBtnMap.setOnClickListener(this);
         mBtnWifi.setOnClickListener(this);
         mBtnGps.setOnClickListener(this);
-        openGPS(this);
+//        openGPS(this);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -168,9 +168,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //提供位置定位服务的位置管理器对象,中枢控制系统
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         //位置提供器，也就是实际上来定位的对象，这里选择的是GPS定位
-        String locationProvider = LocationManager.PASSIVE_PROVIDER;
+        String locationProvider = LocationManager.GPS_PROVIDER;
         //获取手机中开启的位置提供器
         List<String> providers = locationManager.getProviders(true);
+        for (String provider : providers) {
+            Log.e("a","provider --->"+provider );
+        }
+        Log.e("a","---------------provider ------------------" );
         //开始定位,获取当前位置对象
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -184,18 +188,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
 
         }
-        Location location = locationManager.getLastKnownLocation(locationProvider);
-        while (location == null) {
-            //每1s监听一次位置信息，如果位置距离改变超过1m。就执行onLocationChanged方法
-            //如果第一次打开没有显示位置信息，可以退出程序重新进入，就会显示
-            locationManager.requestLocationUpdates("gps", 1000,1,new locationListener());
-        }
+        final Location location = locationManager.getLastKnownLocation(locationProvider);
+
+        //每1s监听一次位置信息，如果位置距离改变超过1m。就执行onLocationChanged方法
+        //如果第一次打开没有显示位置信息，可以退出程序重新进入，就会显示
+        locationManager.requestLocationUpdates("gps", 1000,1,new locationListener());
+//        Log.e("a","location is null  ----- ");
+
 
 
 //        Log.e("a","provider --->"+provider);
 //        Location location = locationManager.getLastKnownLocation(provider); // 通过GPS获取位置
-        Log.e("a","location --->"+location.toString());
-        updateToNewLocation(location);
+//        Log.e("a","location --->"+location.toString());
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                updateToNewLocation(location);
+            }
+        });
+
 // 设置监听器，自动更新的最小时间为间隔N秒(1秒为1*1000，这样写主要为了方便)或最小位移变化超过N米
 //        locationManager.requestLocationUpdates(provider, 100 * 1000 , 500 ,
 //                locationListener);
@@ -204,10 +215,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void updateToNewLocation(Location location) {
 
 //        TextView tv1;
+
 //        tv1 = (TextView) this .findViewById(R.id.tv1);
         if (location != null ) {
             double latitude = location.getLatitude();
             double longitude = location.getLongitude();
+            Log.e("a"," 维度： " + latitude + " \n经度 " + longitude);
             mTvLatInput.setText(String.valueOf(latitude));
             mTvLongitudeInput.setText(String.valueOf(longitude));
 //            tv1.setText( " 维度： " + latitude + " \n经度 " + longitude);

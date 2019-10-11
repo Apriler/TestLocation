@@ -88,11 +88,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 showToast(mBtnMap.getText().toString());
                 break;
             case R.id.btn_wifi:
+                getLocation(LocationManager.NETWORK_PROVIDER);
                 showToast(mBtnWifi.getText().toString());
                 break;
             case R.id.btn_gps:
 //                openGPSSettings();
-                getLocation();
+                getLocation(LocationManager.GPS_PROVIDER);
                 showToast(mBtnGps.getText().toString());
                 break;
         }
@@ -137,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void getLocation() {
+    private void getLocation(String locationType) {
 // 获取位置管理服务
 //        LocationManager locationManager;
 //        String serviceName = Context.LOCATION_SERVICE;
@@ -168,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //提供位置定位服务的位置管理器对象,中枢控制系统
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         //位置提供器，也就是实际上来定位的对象，这里选择的是GPS定位
-        String locationProvider = LocationManager.GPS_PROVIDER;
+        String locationProvider = locationType;
         //获取手机中开启的位置提供器
         List<String> providers = locationManager.getProviders(true);
         for (String provider : providers) {

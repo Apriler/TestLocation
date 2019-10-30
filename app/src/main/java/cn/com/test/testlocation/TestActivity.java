@@ -60,11 +60,11 @@ public class TestActivity extends AppCompatActivity {
 //            return;
         }
         Location location = locationManager.getLastKnownLocation(locationProvider);
-        while (location == null) {
-            //每1s监听一次位置信息，如果位置距离改变超过1m。就执行onLocationChanged方法
-            //如果第一次打开没有显示位置信息，可以退出程序重新进入，就会显示
-            locationManager.requestLocationUpdates("gps", 1000,1,new locationListener());
-        }
+//        while (location == null) {
+//            //每1s监听一次位置信息，如果位置距离改变超过1m。就执行onLocationChanged方法
+//            //如果第一次打开没有显示位置信息，可以退出程序重新进入，就会显示
+////            locationManager.requestLocationUpdates("gps", 1000,1,new locationListener());
+//        }
         //获取纬度
         Double latitude = location.getLatitude();
         //获取经度

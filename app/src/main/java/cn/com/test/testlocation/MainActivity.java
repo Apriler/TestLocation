@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
 
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_NETWORK_STATE}, 1);
 
         }
     }
@@ -82,17 +82,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_reset:
-                showToast(mBtnReset.getText().toString());
+                mTvLatInput.setText("");
+                mTvLongitudeInput.setText("");
+                mTvAccuracyInput.setText("");
+                mTvProviderInput.setText("");
                 break;
             case R.id.btn_map:
                 showToast(mBtnMap.getText().toString());
                 break;
             case R.id.btn_wifi:
+                getLocation(LocationManager.NETWORK_PROVIDER);
                 showToast(mBtnWifi.getText().toString());
                 break;
             case R.id.btn_gps:
 //                openGPSSettings();
-                getLocation();
+                getLocation(LocationManager.GPS_PROVIDER);
                 showToast(mBtnGps.getText().toString());
                 break;
         }
@@ -137,7 +141,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void getLocation() {
+    /**
+     * 获取定位信息
+     * @param locationType 采取定位的方式
+     */
+    private void getLocation(final String locationType) {
 // 获取位置管理服务
 //        LocationManager locationManager;
 //        String serviceName = Context.LOCATION_SERVICE;
@@ -168,13 +176,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //提供位置定位服务的位置管理器对象,中枢控制系统
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         //位置提供器，也就是实际上来定位的对象，这里选择的是GPS定位
-        String locationProvider = LocationManager.GPS_PROVIDER;
+        String locationProvider = locationType;
         //获取手机中开启的位置提供器
         List<String> providers = locationManager.getProviders(true);
         for (String provider : providers) {
             Log.e("a","provider --->"+provider );
         }
-        Log.e("a","---------------provider ------------------" );
+        Log.e("a","--------------------------------" );
         //开始定位,获取当前位置对象
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -188,22 +196,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
 
         }
-        final Location location = locationManager.getLastKnownLocation(locationProvider);
-
         //每1s监听一次位置信息，如果位置距离改变超过1m。就执行onLocationChanged方法
         //如果第一次打开没有显示位置信息，可以退出程序重新进入，就会显示
-        locationManager.requestLocationUpdates("gps", 1000,1,new locationListener());
-//        Log.e("a","location is null  ----- ");
 
+        final Location location = locationManager.getLastKnownLocation(locationProvider);
+        if (location == null) {
+            Log.e("a","location is null------");
+            locationManager.requestLocationUpdates(locationType, 1000, 1, new locationListener());
+        }
 
-
-//        Log.e("a","provider --->"+provider);
-//        Location location = locationManager.getLastKnownLocation(provider); // 通过GPS获取位置
-//        Log.e("a","location --->"+location.toString());
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                updateToNewLocation(location);
+                updateToNewLocation(location,locationType);
             }
         });
 
@@ -212,11 +217,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                locationListener);
     }
 
-    private void updateToNewLocation(Location location) {
+    private void updateToNewLocation(Location location,String locationType) {
 
-//        TextView tv1;
-
-//        tv1 = (TextView) this .findViewById(R.id.tv1);
+        mTvProviderInput.setText(locationType);
         if (location != null ) {
             double latitude = location.getLatitude();
             double longitude = location.getLongitude();

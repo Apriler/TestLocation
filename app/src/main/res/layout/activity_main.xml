@@ -65,95 +65,93 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btn_reset" />
 
-    <RelativeLayout
+
+    <TextView
+        android:id="@+id/tv_quene"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_margin="8dp"
         android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:gravity="center"
-        android:padding="10dp">
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:text=""
+        android:textSize="15sp"
+        android:maxLines="20"
+        android:layout_marginLeft="6dp"
+        android:layout_marginRight="6dp"
+        app:layout_constraintTop_toBottomOf="@id/btn_reset"
+        app:layout_constraintLeft_toLeftOf="@id/btn_reset"
+        app:layout_constraintRight_toRightOf="@id/btn_wifi"
+        app:layout_constraintBottom_toTopOf="@id/btn_gps"
+        android:layout_marginVertical="10dp"/>
 
-        <TextView
-            android:id="@+id/tv_lat"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Latitude : "
-            android:textSize="17sp"
-            android:padding="10dp"/>
+        <!--<TextView-->
+            <!--android:id="@+id/tv_lat_input"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_toRightOf="@id/tv_lat"-->
+            <!--android:hint="Latitude"-->
+            <!--android:textSize="17sp"-->
+            <!--android:padding="10dp"/>-->
+        <!--<TextView-->
+            <!--android:id="@+id/tv_longitude"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="longitude : "-->
+            <!--android:textSize="17sp"-->
+            <!--android:layout_below="@id/tv_lat"-->
+            <!--android:padding="10dp"/>-->
 
-        <TextView
-            android:id="@+id/tv_lat_input"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/tv_lat"
-            android:hint="Latitude"
-            android:textSize="17sp"
-            android:padding="10dp"/>
-        <TextView
-            android:id="@+id/tv_longitude"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="longitude : "
-            android:textSize="17sp"
-            android:layout_below="@id/tv_lat"
-            android:padding="10dp"/>
+        <!--<TextView-->
+            <!--android:id="@+id/tv_longitude_input"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_toRightOf="@id/tv_longitude"-->
+            <!--android:hint="longitude"-->
+            <!--android:textSize="17sp"-->
+            <!--android:layout_below="@id/tv_lat"-->
+            <!--android:padding="10dp"/>-->
 
-        <TextView
-            android:id="@+id/tv_longitude_input"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/tv_longitude"
-            android:hint="longitude"
-            android:textSize="17sp"
-            android:layout_below="@id/tv_lat"
-            android:padding="10dp"/>
+        <!--<TextView-->
+            <!--android:id="@+id/tv_accuracy"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="accuracy : "-->
+            <!--android:textSize="17sp"-->
+            <!--android:layout_below="@id/tv_longitude"-->
+            <!--android:padding="10dp"/>-->
 
-        <TextView
-            android:id="@+id/tv_accuracy"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="accuracy : "
-            android:textSize="17sp"
-            android:layout_below="@id/tv_longitude"
-            android:padding="10dp"/>
+        <!--<TextView-->
+            <!--android:id="@+id/tv_accuracy_input"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_toRightOf="@id/tv_accuracy"-->
+            <!--android:hint="accuracy"-->
+            <!--android:textSize="17sp"-->
+            <!--android:layout_below="@id/tv_longitude"-->
+            <!--android:padding="10dp"/>-->
 
-        <TextView
-            android:id="@+id/tv_accuracy_input"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/tv_accuracy"
-            android:hint="accuracy"
-            android:textSize="17sp"
-            android:layout_below="@id/tv_longitude"
-            android:padding="10dp"/>
+        <!--<TextView-->
+            <!--android:id="@+id/tv_provider"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="provider : "-->
+            <!--android:textSize="17sp"-->
+            <!--android:layout_below="@id/tv_accuracy"-->
+            <!--android:padding="10dp"/>-->
 
-        <TextView
-            android:id="@+id/tv_provider"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="provider : "
-            android:textSize="17sp"
-            android:layout_below="@id/tv_accuracy"
-            android:padding="10dp"/>
-
-        <TextView
-            android:id="@+id/tv_provider_input"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/tv_accuracy"
-            android:hint="provider"
-            android:textSize="17sp"
-            android:layout_below="@id/tv_accuracy"
-            android:padding="10dp"/>
+        <!--<TextView-->
+            <!--android:id="@+id/tv_provider_input"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_toRightOf="@id/tv_accuracy"-->
+            <!--android:hint="provider"-->
+            <!--android:textSize="17sp"-->
+            <!--android:layout_below="@id/tv_accuracy"-->
+            <!--android:padding="10dp"/>-->
 
 
-    </RelativeLayout>
+    <!--</RelativeLayout>-->
 
 
 </android.support.constraint.ConstraintLayout>

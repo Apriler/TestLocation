@@ -36,6 +36,8 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.Callable;
@@ -60,9 +62,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView mTvAccuracyInput;
     private TextView mTvProvider;
     private TextView mTvProviderInput;
+    private TextView mTvQuene;
     private ExecutorService mExecutor = null;
     public volatile String locationType = LocationManager.GPS_PROVIDER;
-    public Queue<LonLat> LonLatQueue = new LimitQueue<>(8);
+    public LimitQueue<LonLat> LonLatQueue = new LimitQueue<>(8);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,14 +79,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mBtnMap = (Button) findViewById(R.id.btn_map);
         mBtnWifi = (Button) findViewById(R.id.btn_wifi);
         mBtnGps = (Button) findViewById(R.id.btn_gps);
-        mTvLat = (TextView) findViewById(R.id.tv_lat);
-        mTvLatInput = (TextView) findViewById(R.id.tv_lat_input);
-        mTvLongitude = (TextView) findViewById(R.id.tv_longitude);
-        mTvLongitudeInput = (TextView) findViewById(R.id.tv_longitude_input);
-        mTvAccuracy = (TextView) findViewById(R.id.tv_accuracy);
-        mTvAccuracyInput = (TextView) findViewById(R.id.tv_accuracy_input);
-        mTvProvider = (TextView) findViewById(R.id.tv_provider);
-        mTvProviderInput = (TextView) findViewById(R.id.tv_provider_input);
+//        mTvLat = (TextView) findViewById(R.id.tv_lat);
+//        mTvLatInput = (TextView) findViewById(R.id.tv_lat_input);
+//        mTvLongitude = (TextView) findViewById(R.id.tv_longitude);
+//        mTvLongitudeInput = (TextView) findViewById(R.id.tv_longitude_input);
+//        mTvAccuracy = (TextView) findViewById(R.id.tv_accuracy);
+//        mTvAccuracyInput = (TextView) findViewById(R.id.tv_accuracy_input);
+//        mTvProvider = (TextView) findViewById(R.id.tv_provider);
+//        mTvProviderInput = (TextView) findViewById(R.id.tv_provider_input);
+        mTvQuene = (TextView) findViewById(R.id.tv_quene);
+
         mExecutor = Executors.newSingleThreadExecutor();
         mBtnReset.setOnClickListener(this);
         mBtnMap.setOnClickListener(this);
@@ -263,23 +268,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void updateToNewLocation(Location location,String locationType) {
 
-        mTvProviderInput.setText(locationType);
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-DD hh:mm:ss");
+        String nowTime = sdf.format(date);
         if (location != null ) {
             double latitude = location.getLatitude();
             double longitude = location.getLongitude();
             float accuracy = location.getAccuracy();
             Log.e("luo"," 维度： " + latitude + " \n经度 " + longitude+ " \n精准度 " + accuracy);
-            mTvLatInput.setText(String.valueOf(latitude));
-            mTvLongitudeInput.setText(String.valueOf(longitude));
-            mTvAccuracyInput.setText(String.valueOf(accuracy));
+            LonLatQueue.offer(new LonLat(latitude,longitude,accuracy,nowTime,locationType,true));
+//            mTvLatInput.setText(String.valueOf(latitude));
+//            mTvLongitudeInput.setText(String.valueOf(longitude));
+//            mTvAccuracyInput.setText(String.valueOf(accuracy));
 //            mTvProviderInput.setText(locationType);
 //            tv1.setText( " 维度： " + latitude + " \n经度 " + longitude);
         } else {
 //            tv1.setText(  );
-            mTvLatInput.setText(String.valueOf(" 无法获取地理信息 "));
-            mTvLongitudeInput.setText(String.valueOf(" 无法获取地理信息 "));
-            mTvAccuracyInput.setText("无法获取经度信息");
+            LonLatQueue.offer(new LonLat(nowTime,locationType,false));
+//            mTvLatInput.setText(String.valueOf(" 无法获取地理信息 "));
+//            mTvLongitudeInput.setText(String.valueOf(" 无法获取地理信息 "));
+//            mTvAccuracyInput.setText("无法获取经度信息");
+
         }
+        mTvQuene.setText(LonLatQueue.toString());
 
     }
 

@@ -7,6 +7,25 @@ public class LonLat {
     private float accuracy;
     private String time;
     private String type;
+    private boolean isGetLocation;
+
+    public LonLat() {
+    }
+
+    public LonLat(double latitude, double longitude, float accuracy, String time, String type, boolean isGetLocation) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.accuracy = accuracy;
+        this.time = time;
+        this.type = type;
+        this.isGetLocation = isGetLocation;
+    }
+
+    public LonLat(String time, String type, boolean isGetLocation) {
+        this.time = time;
+        this.type = type;
+        this.isGetLocation = isGetLocation;
+    }
 
     public double getLatitude() {
         return latitude;
@@ -48,13 +67,26 @@ public class LonLat {
         this.type = type;
     }
 
+    public boolean isGetLocation() {
+        return isGetLocation;
+    }
+
+    public void setGetLocation(boolean getLocation) {
+        isGetLocation = getLocation;
+    }
+
+
     @Override
     public String toString() {
-        return time +
+        if (isGetLocation)
+            return time +
                 "  latitude:" + latitude +
                 ", longitude:" + longitude +
                 ", accuracy:" + accuracy +
-                ", time='" + time + '\'' +
-                ", type='" + type + '\'';
+                ", type:" + type + '\n';
+        else
+            return time +
+                " Location information not obtained" +
+                ", type:'" + type + '\n';
     }
 }

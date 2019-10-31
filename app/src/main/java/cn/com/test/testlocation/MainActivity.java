@@ -269,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void updateToNewLocation(Location location,String locationType) {
 
         Date date = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-DD hh:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String nowTime = sdf.format(date);
         if (location != null ) {
             double latitude = location.getLatitude();

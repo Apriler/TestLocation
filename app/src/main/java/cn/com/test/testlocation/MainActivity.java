@@ -64,8 +64,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView mTvProviderInput;
     private TextView mTvQuene;
     private ExecutorService mExecutor = null;
-    public volatile String locationType = LocationManager.GPS_PROVIDER;
+    public static volatile String locationType = LocationManager.GPS_PROVIDER;
     public LimitQueue<LonLat> LonLatQueue = new LimitQueue<>(8);
+    private LocationManager locationManager;
+    private MainActivity.locationListener1 locationListener1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,12 +90,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        mTvProvider = (TextView) findViewById(R.id.tv_provider);
 //        mTvProviderInput = (TextView) findViewById(R.id.tv_provider_input);
         mTvQuene = (TextView) findViewById(R.id.tv_quene);
-
+        locationListener1 = new locationListener1();
         mExecutor = Executors.newSingleThreadExecutor();
         mBtnReset.setOnClickListener(this);
         mBtnMap.setOnClickListener(this);
         mBtnWifi.setOnClickListener(this);
         mBtnGps.setOnClickListener(this);
+        locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
 //        openGPS(this);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -108,10 +111,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
 
+
     }
 
     @Override
+    @SuppressLint("MissingPermission")
     public void onClick(View v) {
+
         switch (v.getId()) {
             case R.id.btn_reset:
                 mTvLatInput.setText("");
@@ -121,13 +127,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn_map:
                 showToast(mBtnMap.getText().toString());
+
+//                while (true){
+                locationManager.requestLocationUpdates(locationType, 1000, 0, locationListener1);
+//                }
                 LocationProcessor locationProcessorNetwork = new LocationProcessor(this);
                 locationProcessorNetwork.addDownloadTask();
-                break;
+
             case R.id.btn_wifi:
 //                getLocation(LocationManager.NETWORK_PROVIDER);
+                locationManager.removeUpdates(locationListener1);
                 locationType = LocationManager.NETWORK_PROVIDER;
-
+                locationManager.requestLocationUpdates(locationType, 1000, 0, locationListener1);
 
 //                LocationTask callNetwork = new LocationTask(this, );
 //                FutureTask<Boolean> fuNetwork=new FutureTask<Boolean>(callNetwork);
@@ -140,7 +151,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                openGPSSettings();
 //                getLocation(LocationManager.GPS_PROVIDER);
 //                LocationTask callGps = new LocationTask(this, LocationManager.GPS_PROVIDER);
+                locationManager.removeUpdates(locationListener1);
                 locationType = LocationManager.GPS_PROVIDER;
+                locationManager.requestLocationUpdates(locationType, 1000, 0, locationListener1);
+//                locationManager.requestLocationUpdates(locationType, 1000, 0, new locationListener1());
 //                LocationProcessor locationProcessorGps =new LocationProcessor(this);
 //                locationProcessorGps.addDownloadTask();
                 showToast(mBtnGps.getText().toString());
@@ -290,7 +304,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            mTvAccuracyInput.setText("无法获取经度信息");
 
         }
-        mTvQuene.setText(LonLatQueue.toString());
+
 
     }
 
@@ -324,9 +338,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             try {
                 while (true){
                     Log.e("luo","locationType is ------" +locationType);
+//                    locationManager.requestLocationUpdates(locationType, 1000, 1, new locationListener1());
                     final Location location = locationManager.getLastKnownLocation(locationType);
                     if (location != null) {
-                        Log.e("luo","location is null------");
+                        Log.e("luo", "location is null------");
 //                        locationManager.requestLocationUpdates(locationType, 1000, 1, new locationListener() {
 //                            @Override
 //                            public void onLocationChanged(Location location) {
@@ -366,14 +381,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                        Log.e("luo","--------------" );
 //
 
+//                        ((Activity) mContext).runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                Log.e("luo","--------------locationType--->:"+locationType );
+//                            updateToNewLocation(location,locationType);
+//                            mTvQuene.setText(LonLatQueue.toString());
+//                            }
+//                        });
+//                    }else {
                     }
-                    ((Activity) mContext).runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.e("luo","--------------locationType--->:"+locationType );
-                            updateToNewLocation(location,locationType);
-                        }
-                    });
+                        ((Activity) mContext).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.e("luo","locationType--->:"+locationType );
+                                updateToNewLocation(location,locationType);
+                                mTvQuene.setText(LonLatQueue.toString());
+                            }
+                        });
+//                    }
                     Thread.sleep(1000);
 //                    this.wait(1000);
                 }
@@ -430,6 +456,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    class locationListener1 implements LocationListener {
+        @Override
+        public void onLocationChanged(final Location location) {
+//            runOnUiThread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    Log.e("luo", "--------------locationType--->:" + locationType);
+//                    updateToNewLocation(location, locationType);
+//                }
+//            });
+        }
 
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+//        不可用的状态
+            if (status != LocationProvider.AVAILABLE) {
+                switch (status) {
+                    case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                        Log.e("luo", "-------------provider: " + provider + "  --->  onStatusChanged  ,status --->TEMPORARILY_UNAVAILABLE");
+                        break;
+                    case LocationProvider.OUT_OF_SERVICE:
+                        Log.e("luo", "-------------provider: " + provider + "  --->  onStatusChanged  ,status --->OUT_OF_SERVICE");
+                        break;
+                }
+
+            }
+            Log.e("luo", "-------------provider: " + provider + "  --->  onStatusChanged  ,status --->AVAILABLE");
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+            Log.e("位置提供器：", "启用");
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+
+    }
 
 }

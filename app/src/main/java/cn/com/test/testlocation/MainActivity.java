@@ -13,8 +13,12 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.net.Uri;
+import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -35,7 +39,11 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -47,6 +55,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -63,11 +73,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView mTvProvider;
     private TextView mTvProviderInput;
     private TextView mTvQuene;
+
     private ExecutorService mExecutor = null;
     public static volatile String locationType = LocationManager.GPS_PROVIDER;
     public LimitQueue<LonLat> LonLatQueue = new LimitQueue<>(8);
     private LocationManager locationManager;
     private MainActivity.locationListener1 locationListener1;
+    private String log_file = Environment.getExternalStorageDirectory().getAbsolutePath() +"/location.txt";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +108,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mBtnMap.setOnClickListener(this);
         mBtnWifi.setOnClickListener(this);
         mBtnGps.setOnClickListener(this);
+
+
+
+
+
         locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
 //        openGPS(this);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -107,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
 
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_NETWORK_STATE}, 1);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_NETWORK_STATE,Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
 
         }
 
@@ -280,7 +297,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                locationListener);
     }
 
-    public void updateToNewLocation(Location location,String locationType) {
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public void updateToNewLocation(Location location, String locationType) {
 
         Date date = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -290,7 +308,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             double longitude = location.getLongitude();
             float accuracy = location.getAccuracy();
             Log.e("luo"," 维度： " + latitude + " \n经度 " + longitude+ " \n精准度 " + accuracy);
-            LonLatQueue.offer(new LonLat(latitude,longitude,accuracy,nowTime,locationType,true));
+            LonLat lonLat = new LonLat(latitude, longitude, accuracy, nowTime, locationType, true);
+            this.outToFile(lonLat);
+            LonLatQueue.offer(lonLat);
 //            mTvLatInput.setText(String.valueOf(latitude));
 //            mTvLongitudeInput.setText(String.valueOf(longitude));
 //            mTvAccuracyInput.setText(String.valueOf(accuracy));
@@ -298,6 +318,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            tv1.setText( " 维度： " + latitude + " \n经度 " + longitude);
         } else {
 //            tv1.setText(  );
+
             LonLatQueue.offer(new LonLat(nowTime,locationType,false));
 //            mTvLatInput.setText(String.valueOf(" 无法获取地理信息 "));
 //            mTvLongitudeInput.setText(String.valueOf(" 无法获取地理信息 "));
@@ -496,5 +517,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public void outToFile(LonLat lonLat) {
+        FileOutputStream out = null;
+        BufferedWriter write = null;
+        try {
+            File file = new File(log_file);
+            // 判断文件是否存在
+            if (!file.exists()) {
+                File path = new File(file.getParent());
+                if (!path.exists() && !path.mkdirs()) {   // 判断文件夹是否存在，不存在则创建文件夹
+                    Toast.makeText(getApplicationContext(), "文件夹创建失败", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (!file.createNewFile()) {    // 创建文件
+                    Toast.makeText(getApplicationContext(), "文件创建失败", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+            out = new FileOutputStream(file,true);
+            write = new BufferedWriter(new OutputStreamWriter(out));
+            //获取电池电量
+            BatteryManager manager = (BatteryManager) getSystemService(BATTERY_SERVICE);
+            int intProperty = manager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+            //写入到文件
+            write.write(lonLat.tofileString(intProperty));
+            write.close();
+        } catch (IOException e) {
+            Log.e("luo", "log locaton msg error :" + e);
+        }
+    }
+
 
 }

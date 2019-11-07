@@ -89,4 +89,10 @@ public class LonLat {
                 " Location information not obtained" +
                 ", type:'" + type + '\n';
     }
+
+    public String tofileString(int electricQuantity) {
+
+        return longitude +"  "+latitude+"  "+accuracy+"  "+type+"  "+time+"  "+electricQuantity+ '\n';
+
+    }
 }

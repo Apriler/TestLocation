@@ -27,17 +27,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationManager;
-import android.location.LocationProvider;
-import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.util.Log;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -48,10 +37,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.Callable;
 
-import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -61,7 +47,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Button mBtnReset;
-    private Button mBtnMap;
+    private Button mBtnStart;
     private Button mBtnWifi;
     private Button mBtnGps;
     private TextView mTvLat;
@@ -80,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private LocationManager locationManager;
     private MainActivity.locationListener1 locationListener1;
     private String log_file = Environment.getExternalStorageDirectory().getAbsolutePath() +"/location.txt";
-
+    public boolean isPause = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void initView() {
         mBtnReset = (Button) findViewById(R.id.btn_reset);
-        mBtnMap = (Button) findViewById(R.id.btn_map);
+        mBtnStart = (Button) findViewById(R.id.btn_start);
         mBtnWifi = (Button) findViewById(R.id.btn_wifi);
         mBtnGps = (Button) findViewById(R.id.btn_gps);
 //        mTvLat = (TextView) findViewById(R.id.tv_lat);
@@ -105,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         locationListener1 = new locationListener1();
         mExecutor = Executors.newSingleThreadExecutor();
         mBtnReset.setOnClickListener(this);
-        mBtnMap.setOnClickListener(this);
+        mBtnStart.setOnClickListener(this);
         mBtnWifi.setOnClickListener(this);
         mBtnGps.setOnClickListener(this);
 
@@ -135,6 +121,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @SuppressLint("MissingPermission")
     public void onClick(View v) {
 
+        LocationTask locationTask = new LocationTask(this);
+        Thread th = new Thread(locationTask);
+
         switch (v.getId()) {
             case R.id.btn_reset:
                 mTvLatInput.setText("");
@@ -142,15 +131,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mTvAccuracyInput.setText("");
                 mTvProviderInput.setText("");
                 break;
-            case R.id.btn_map:
-                showToast(mBtnMap.getText().toString());
-
-//                while (true){
-                locationManager.requestLocationUpdates(locationType, 1000, 0, locationListener1);
-//                }
-                LocationProcessor locationProcessorNetwork = new LocationProcessor(this);
-                locationProcessorNetwork.addDownloadTask();
-
+            case R.id.btn_start:
+                isPause = !isPause;
+                if (!isPause){
+                    showToast("start");
+                    th.start();
+                    locationTask.toResume();
+                }else {
+                    showToast("pause");
+                    locationTask.toSuspend();
+                }
+                break;
             case R.id.btn_wifi:
 //                getLocation(LocationManager.NETWORK_PROVIDER);
                 locationManager.removeUpdates(locationListener1);
@@ -218,84 +209,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    /**
-     * 获取定位信息
-     * @param locationType 采取定位的方式
-     */
-    private void getLocation(final String locationType) {
-// 获取位置管理服务
-//        LocationProcessor locationManager;
-//        String serviceName = Context.LOCATION_SERVICE;
-//        locationManager = (LocationProcessor) this.getSystemService(serviceName);
-//
-//// 查找到服务信息
-//        Criteria criteria = new Criteria();
-//        criteria.setAccuracy(Criteria.ACCURACY_FINE); // 高精度
-//        criteria.setAltitudeRequired(false);
-//        criteria.setBearingRequired(false);
-//        criteria.setCostAllowed(true);
-//        criteria.setPowerRequirement(Criteria.POWER_LOW); // 低功耗
-//
-//        String provider = locationManager.getBestProvider(criteria, true); // 获取GPS信息
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            // TODO: Consider calling
-////                ActivityCompat#requestPermissions
-////             here to request the missing permissions, and then overriding
-////               public void onRequestPermissionsResult(int requestCode, String[] permissions,
-////                                                      int[] grantResults)
-////             to handle the case where the user grants the permission. See the documentation
-////             for ActivityCompat#requestPermissions for more details.
-//            return;
-//        }
 
-
-//
-//        //提供位置定位服务的位置管理器对象,中枢控制系统
-//        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//        //位置提供器，也就是实际上来定位的对象，这里选择的是GPS定位
-//        String locationProvider = locationType;
-//        //获取手机中开启的位置提供器
-//        List<String> providers = locationManager.getProviders(true);
-//        for (String provider : providers) {
-//            Log.e("a","provider --->"+provider );
-//        }
-//        Log.e("a","--------------------------------" );
-//        //开始定位,获取当前位置对象
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            // TODO: Consider calling
-//            //    ActivityCompat#requestPermissions
-//            // here to request the missing permissions, and then overriding
-//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//            //                                          int[] grantResults)
-//            // to handle the case where the user grants the permission. See the documentation
-//            // for ActivityCompat#requestPermissions for more details.
-//
-//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-//
-//        }
-        //每1s监听一次位置信息，如果位置距离改变超过1m。就执行onLocationChanged方法
-        //如果第一次打开没有显示位置信息，可以退出程序重新进入，就会显示
-
-//        final Location location = locationManager.getLastKnownLocation(locationProvider);
-//        if (location == null) {
-//            Log.e("a","location is null------");
-//            locationManager.requestLocationUpdates(locationType, 1000, 1, new locationListener());
-//        }
-
-//        Log.e("a","provider --->"+provider);
-//        Location location = locationManager.getLastKnownLocation(provider); // 通过GPS获取位置
-//        Log.e("a","location --->"+location.toString());
-//        runOnUiThread(new Runnable() {
-//            @Override
-//            public void run() {
-//                updateToNewLocation(location);
-//            }
-//        });
-
-// 设置监听器，自动更新的最小时间为间隔N秒(1秒为1*1000，这样写主要为了方便)或最小位移变化超过N米
-//        locationManager.requestLocationUpdates(provider, 100 * 1000 , 500 ,
-//                locationListener);
-    }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void updateToNewLocation(Location location, String locationType) {
@@ -332,8 +246,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
+
     class LocationTask implements Runnable {
-        private LocationTask mTask = this;
+
 
         public locationListener mListener1;
 
@@ -341,15 +256,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        private String locationType;
         private LocationManager locationManager;
         private LocationProvider locationProvider;
-        private LocationProcessor locationProcessor;
 
-        public LocationTask(Context mContext,LocationProcessor locationProcessor) {
+
+        public LocationTask(Context mContext) {
 //        mListener = listener;
             this.mContext =mContext;
-//            this.locationType =locationType;
-//            locationProcessor = new LocationProcessor(mContext,locationType);
-            this.locationProcessor =locationProcessor;
+
             init();
+        }
+
+        public synchronized void toSuspend() {//同步方法
+            isPause = false;
+            notify();//当前等待的进程，继续执行（唤醒线程）
+        }
+
+        public synchronized void toResume() {//不执行wait，并唤醒暂停的线程
+
+            isPause = true;
         }
 
 
@@ -358,6 +281,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void run() {
             try {
                 while (true){
+                    //同步代码块，加锁
+                    synchronized (this) {
+                        while (isPause) {
+                            try {
+                                //线程进入等待状态
+                                wait();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
                     Log.e("luo","locationType is ------" +locationType);
 //                    locationManager.requestLocationUpdates(locationType, 1000, 1, new locationListener1());
                     final Location location = locationManager.getLastKnownLocation(locationType);
@@ -413,6 +347,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                    }else {
                     }
                         ((Activity) mContext).runOnUiThread(new Runnable() {
+                            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                             @Override
                             public void run() {
                                 Log.e("luo","locationType--->:"+locationType );
@@ -442,40 +377,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    class LocationProcessor {
 
-
-        private Context mContext;
-//        private String locationType;
-
-        public LocationProcessor(Context mContext) {
-
-            this.mContext =mContext;
-//            this.locationType =locationType;
-
-        }
-
-
-
-        /**
-         * 添加下载任务到下载队列里,同时将下载任务放到线程池中
-         */
-        public boolean addDownloadTask() {
-
-            Thread th = new Thread(new LocationTask(mContext,this));
-            th.start();
-
-
-            return true;
-        }
-
-        /**
-         * 删除下载任务
-         */
-        public void removeTask() {
-
-        }
-    }
 
     class locationListener1 implements LocationListener {
         @Override

@@ -19,7 +19,7 @@
         android:text="reset"
 
         app:layout_constraintBottom_toTopOf="@+id/btn_gps"
-        app:layout_constraintEnd_toStartOf="@+id/btn_stop"
+        app:layout_constraintEnd_toStartOf="@+id/btn_map"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -34,21 +34,21 @@
         app:layout_constraintBottom_toTopOf="@+id/btn_wifi"
         app:layout_constraintLeft_toRightOf="@+id/btn_reset"
 
-        app:layout_constraintRight_toLeftOf="@+id/btn_stop"
+        app:layout_constraintRight_toLeftOf="@+id/btn_map"
         app:layout_constraintTop_toTopOf="parent"
 
         />
 
 
     <Button
-        android:id="@+id/btn_stop"
+        android:id="@+id/btn_map"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_alignParentEnd="true"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="422dp"
-        android:text="stop"
+        android:text="map"
         app:layout_constraintBottom_toTopOf="@+id/btn_wifi"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/btn_reset"
@@ -66,7 +66,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/btn_gps"
-        app:layout_constraintTop_toBottomOf="@+id/btn_stop" />
+        app:layout_constraintTop_toBottomOf="@+id/btn_map" />
 
     <Button
         android:id="@+id/btn_gps"

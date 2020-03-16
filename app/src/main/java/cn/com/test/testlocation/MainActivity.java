@@ -66,7 +66,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private LocationManager locationManager;
     private MainActivity.locationListener1 locationListener1;
     private String log_file = Environment.getExternalStorageDirectory().getAbsolutePath() +"/location.txt";
+    // 是否 暂停标志位
     public boolean isPause = false;
+    //是否 第一次启动 标志位
+    public boolean isFirstStart = true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -132,14 +135,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mTvProviderInput.setText("");
                 break;
             case R.id.btn_start:
-                isPause = !isPause;
-                if (!isPause){
+                if (isFirstStart){
                     showToast("start");
                     th.start();
-                    locationTask.toResume();
+                    isFirstStart = false;
                 }else {
-                    showToast("pause");
-                    locationTask.toSuspend();
+                    if (!isPause) {
+                        showToast("start!");
+                        locationTask.toResume();
+                        mBtnStart.setText(" pause");
+                    } else {
+                        showToast("pause!");
+                        locationTask.toSuspend();
+                        mBtnStart.setText("start");
+                    }
+                    isPause = !isPause;
                 }
                 break;
             case R.id.btn_wifi:
@@ -271,7 +281,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         public synchronized void toResume() {//不执行wait，并唤醒暂停的线程
-
             isPause = true;
         }
 

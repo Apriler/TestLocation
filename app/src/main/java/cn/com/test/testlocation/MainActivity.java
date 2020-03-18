@@ -63,6 +63,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean isPause = false;
     //是否 第一次启动 标志位
     public boolean isFirstStart = true;
+    //gps获取定位的次数
+    public volatile int gpsCount = 0;
+    //wifi获取定位的次数
+    public volatile int wifiCount = 0;
 
     LocationTask locationTask;
     Thread th;
@@ -105,6 +109,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
 
+
     }
 
     @Override
@@ -119,6 +124,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 th.interrupt();
                 isFirstStart = true;
                 mBtnStart.setText("start");
+                clearCount();
                 break;
             case R.id.btn_start:
                 if (isFirstStart) {
@@ -142,6 +148,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
             case R.id.btn_wifi:
+                //先清除计数
+                clearCount();
 //                getLocation(LocationManager.NETWORK_PROVIDER);
                 locationManager.removeUpdates(locationListener1);
                 locationType = LocationManager.NETWORK_PROVIDER;
@@ -153,8 +161,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                thNetwork.start();
 
                 showToast(mBtnWifi.getText().toString());
+
                 break;
             case R.id.btn_gps:
+                clearCount();
 //                openGPSSettings();
 //                getLocation(LocationManager.GPS_PROVIDER);
 //                LocationTask callGps = new LocationTask(this, LocationManager.GPS_PROVIDER);
@@ -241,6 +251,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     }
+    public void clearCount(){
+        this.wifiCount = 0;
+        this.gpsCount = 0;
+    }
 
 
     class LocationTask implements Runnable {
@@ -299,13 +313,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         @Override
                         public void run() {
                             Log.e("luo", "locationType--->:" + locationType);
-                            updateToNewLocation(location, locationType);
                             mTvQuene.setText(LonLatQueue.toString());
+                            if (wifiCount == 5){
+                                mBtnGps.performClick();
+                                return;
+                            }else if (gpsCount == 3){
+                                mBtnWifi.performClick();
+                                return;
+                            }
+                            updateToNewLocation(location, locationType);
+                            if (LocationManager.GPS_PROVIDER.equals(locationType)){
+                                gpsCount++;
+                            }else if (LocationManager.NETWORK_PROVIDER.equals(locationType)){
+                                wifiCount++;
+                            }
                         }
                     });
 //                    }
                     Thread.sleep(3000);
                 }
+
 
             } catch (Exception e) {
                 Log.e("luo", "--------------e:" + e);

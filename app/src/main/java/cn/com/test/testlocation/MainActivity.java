@@ -13,6 +13,8 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,6 +23,12 @@ import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.CellIdentityGsm;
+import android.telephony.CellInfo;
+import android.telephony.CellInfoGsm;
+import android.telephony.CellSignalStrengthGsm;
+import android.telephony.SignalStrength;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -51,7 +59,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button mBtnWifi;
     private Button mBtnGps;
 
+
     private TextView mTvQuene;
+    private TextView mTvSignalStrength;
 
     private ExecutorService mExecutor = null;
     public static volatile String locationType = LocationManager.GPS_PROVIDER;
@@ -79,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mBtnStart = (Button) findViewById(R.id.btn_start);
         mBtnWifi = (Button) findViewById(R.id.btn_wifi);
         mBtnGps = (Button) findViewById(R.id.btn_gps);
-
+        mTvSignalStrength = findViewById(R.id.tv_signal_strength);
         mTvQuene = (TextView) findViewById(R.id.tv_quene);
         locationListener1 = new locationListener1();
         mExecutor = Executors.newSingleThreadExecutor();
@@ -211,16 +221,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public void updateToNewLocation(Location location, String locationType) {
+    public void updateToNewLocation(WifiInfo wifiInfo, SignalStrength signalStrength, Location location, String locationType) {
 
         Date date = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String nowTime = sdf.format(date);
+        //获取gsm信号强度
+        int dbm = 0;
+        dbm = signalStrength.getGsmSignalStrength();
+        //获取wifi信号强度
+        int rssi = 0;
+        rssi = wifiInfo.getRssi();
+
+        mTvSignalStrength.setText(String.format("signal  strength： GSM %d          WIFI %d",dbm,rssi));
         if (location != null) {
             double latitude = location.getLatitude();
             double longitude = location.getLongitude();
+
             float accuracy = location.getAccuracy();
-            Log.e("luo", " 维度： " + latitude + " \n经度 " + longitude + " \n精准度 " + accuracy);
+            Log.e("luo", " 维度： " + latitude + " \n经度 " + longitude + " \n精准度 " + accuracy + " \ngsm信号强度 " + dbm + " \nwifi信号强度 " + rssi);
             LonLat lonLat = new LonLat(latitude, longitude, accuracy, nowTime, locationType, true);
             this.outToFile(lonLat);
             LonLatQueue.offer(lonLat);
@@ -270,6 +289,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
 
+        @RequiresApi(api = Build.VERSION_CODES.P)
         @Override
         @SuppressLint("MissingPermission")
         public void run() {
@@ -294,12 +314,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Log.e("luo", "location is null------");
 
                     }
+                    TelephonyManager mTelephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+                    final SignalStrength signalStrength = mTelephonyManager.getSignalStrength();
+                    final List<CellInfo> allCellInfo = mTelephonyManager.getAllCellInfo();
+                    WifiManager wifi_service = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                    final WifiInfo wifiInfo = wifi_service.getConnectionInfo();
+
                     ((Activity) mContext).runOnUiThread(new Runnable() {
                         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                         @Override
                         public void run() {
                             Log.e("luo", "locationType--->:" + locationType);
-                            updateToNewLocation(location, locationType);
+                            updateToNewLocation(wifiInfo, signalStrength, location, locationType);
                             mTvQuene.setText(LonLatQueue.toString());
                         }
                     });

@@ -339,7 +339,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         @Override
                         public void run() {
                             Log.e("luo", "locationType--->:" + locationType);
-                            updateToNewLocation(wifiInfo, signalStrength, location, locationType);
                             mTvQuene.setText(LonLatQueue.toString());
                             if (wifiCount == 5){
                                 mBtnGps.performClick();
@@ -348,7 +347,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 mBtnWifi.performClick();
                                 return;
                             }
-                            updateToNewLocation(location, locationType);
+                            updateToNewLocation(wifiInfo, signalStrength, location, locationType);
                             if (LocationManager.GPS_PROVIDER.equals(locationType)){
                                 gpsCount++;
                             }else if (LocationManager.NETWORK_PROVIDER.equals(locationType)){

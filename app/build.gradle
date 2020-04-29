@@ -17,6 +17,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    repositories {
+        flatDir {
+            dirs 'libs'
+        }
+    }
 }
 
 dependencies {
@@ -27,4 +32,16 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'com.yanzhenjie:permission:2.0.0-rc12'
+    // 友盟基础组件库（所有友盟业务SDK都依赖基础组件库）
+    implementation "com.umeng.umsdk:common:2.1.0"
+
+// 下面各SDK根据宿主App是否使用相关业务按需引入。
+// 友盟统计SDK
+    implementation "com.umeng.umsdk:analytics:8.1.3"
+    // 可视化埋点库调试依赖
+    // tracker-channel和tracker-release是必须导入的包
+    // tracker-config包仅在埋点配置模式导入，线上模式请切勿导入此包！
+//    implementation(name: 'tracker-channel-1.0.1', ext: 'aar')
+//    implementation(name: 'tracker-release-1.0.1', ext: 'aar')
+//    implementation(name: 'tracker-config-1.0.1', ext: 'aar')
 }

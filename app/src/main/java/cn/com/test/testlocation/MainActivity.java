@@ -3,6 +3,7 @@ package cn.com.test.testlocation;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -35,6 +36,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.umeng.analytics.MobclickAgent;
+import com.umeng.commonsdk.UMConfigure;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -84,7 +88,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+                setContentView(R.layout.activity_main);
+        // 打开统计SDK调试模式
+        UMConfigure.setLogEnabled(true);
         initView();
     }
 
@@ -123,6 +129,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        MobclickAgent.onResume(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        MobclickAgent.onPause(this);
+    }
+
+    @Override
     @SuppressLint("MissingPermission")
     public void onClick(View v) {
 
@@ -137,6 +155,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 clearCount();
                 break;
             case R.id.btn_start:
+                //事件汇报
+                MobclickAgent.onEvent(this, "start");
                 if (isFirstStart) {
                     locationTask = new LocationTask(this);
                     isPause = false;

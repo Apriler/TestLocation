@@ -2,6 +2,7 @@ package cn.com.test.testlocation;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.app.PendingIntent;
@@ -46,6 +47,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Queue;
@@ -68,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView mTvSignalStrength;
 
     private ExecutorService mExecutor = null;
-    public static volatile String locationType = LocationManager.GPS_PROVIDER;
+    public static volatile String locationType = LocationManager.NETWORK_PROVIDER;
     public LimitQueue<LonLat> LonLatQueue = new LimitQueue<>(8);
     private LocationManager locationManager;
     private MainActivity.locationListener1 locationListener1;
@@ -82,11 +84,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //wifi获取定位的次数
     public volatile int wifiCount = 0;
 
+    private final int SDK_PERMISSION_REQUEST = 127;
+
+    private String permissionInfo;
+
     LocationTask locationTask;
     Thread th;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        getPersimmions();
         super.onCreate(savedInstanceState);
                 setContentView(R.layout.activity_main);
         // 打开统计SDK调试模式
@@ -110,22 +117,96 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-//        openGPS(this);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+////        openGPS(this);
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+//                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            // TODO: Consider calling
+//            //    ActivityCompat#requestPermissions
+//            // here to request the missing permissions, and then overriding
+//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+//            //                                          int[] grantResults)
+//            // to handle the case where the user grants the permission. See the documentation
+//            // for ActivityCompat#requestPermissions for more details.
+//
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+//
+//        }
 
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
 
+
+
+    }
+    //判断GPS是否打开
+    private boolean isGpsOpened() {
+        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
+
+    @TargetApi(23)
+    private void getPersimmions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            ArrayList<String> permissions = new ArrayList<String>();
+            /***
+             * 定位权限为必须权限，用户如果禁止，则每次进入都会申请
+             */
+            // 定位精确位置
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+            }
+            if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+            }
+            //悬浮窗
+//            if (checkSelfPermission(Manifest.permission.SYSTEM_ALERT_WINDOW) != PackageManager.PERMISSION_GRANTED) {
+//                permissions.add(Manifest.permission.SYSTEM_ALERT_WINDOW);
+//            }
+            /*
+             * 读写权限和电话状态权限非必要权限(建议授予)只会申请一次，用户同意或者禁止，只会弹一次
+             */
+            // 读写权限
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+            }
+            if (addPermission(permissions, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                permissionInfo += "Manifest.permission.READ_EXTERNAL_STORAGE Deny \n";
+            }
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            }
+            if (addPermission(permissions, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                permissionInfo += "Manifest.permission.WRITE_EXTERNAL_STORAGE Deny \n";
+            }
+            // 读取电话状态权限
+//            if (addPermission(permissions, Manifest.permission.READ_PHONE_STATE)) {
+//                permissionInfo += "Manifest.permission.READ_PHONE_STATE Deny \n";
+//            }
+
+            if (permissions.size() > 0) {
+                requestPermissions(permissions.toArray(new String[permissions.size()]), SDK_PERMISSION_REQUEST);
+            }
         }
+    }
 
+    @TargetApi(23)
+    private boolean addPermission(ArrayList<String> permissionsList, String permission) {
+        if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) { // 如果应用没有获得对应权限,则添加到列表中,准备批量申请
+            if (shouldShowRequestPermissionRationale(permission)) {
+                return true;
+            } else {
+                permissionsList.add(permission);
+                return false;
+            }
 
+        } else {
+            return true;
+        }
+    }
+
+    @TargetApi(23)
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        // TODO Auto-generated method stub
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
     }
 
@@ -144,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     @SuppressLint("MissingPermission")
     public void onClick(View v) {
-
+//        locationListener1 = new locationListener1();
         switch (v.getId()) {
             case R.id.btn_reset:
                 isPause = true;
@@ -153,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 th.interrupt();
                 isFirstStart = true;
                 mBtnStart.setText("start");
-                clearCount();
+//                clearCount();
                 break;
             case R.id.btn_start:
                 //事件汇报
@@ -180,9 +261,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn_wifi:
                 //先清除计数
-                clearCount();
+//                clearCount();
 //                getLocation(LocationManager.NETWORK_PROVIDER);
-                locationManager.removeUpdates(locationListener1);
+//                locationManager.removeUpdates(locationListener1);
                 locationType = LocationManager.NETWORK_PROVIDER;
                 locationManager.requestLocationUpdates(locationType, 1000, 0, locationListener1);
 
@@ -195,11 +276,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 break;
             case R.id.btn_gps:
-                clearCount();
+//                clearCount();
 //                openGPSSettings();
 //                getLocation(LocationManager.GPS_PROVIDER);
 //                LocationTask callGps = new LocationTask(this, LocationManager.GPS_PROVIDER);
-                locationManager.removeUpdates(locationListener1);
+//                locationManager.removeUpdates(locationListener1);
                 locationType = LocationManager.GPS_PROVIDER;
                 locationManager.requestLocationUpdates(locationType, 1000, 0, locationListener1);
 //                locationManager.requestLocationUpdates(locationType, 1000, 0, new locationListener1());
@@ -217,42 +298,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toast.makeText(this.getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
     }
 
-    private void openGPSSettings() {
-        LocationManager alm = (LocationManager) this
-                .getSystemService(Context.LOCATION_SERVICE);
-        if (alm.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)) {
-            Toast.makeText(this, " GPS模块正常 ", Toast.LENGTH_SHORT)
-                    .show();
-            return;
-        }
-
-        Toast.makeText(this, " 请开启GPS！ ", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(Settings.ACTION_SECURITY_SETTINGS);
-        startActivityForResult(intent, 0); // 此为设置完成后返回到获取界面
-
-    }
-
-    /**
-     * 强制帮用户打开GPS
-     *
-     * @param context
-     */
-    public static final void openGPS(Context context) {
-        Intent GPSIntent = new Intent();
-        GPSIntent.setClassName("com.android.settings",
-                "com.android.settings.widget.SettingsAppWidgetProvider");
-        GPSIntent.addCategory("android.intent.category.ALTERNATIVE");
-        GPSIntent.setData(Uri.parse("custom:3"));
-        try {
-            PendingIntent.getBroadcast(context, 0, GPSIntent, 0).send();
-        } catch (PendingIntent.CanceledException e) {
-            e.printStackTrace();
-        }
-    }
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public void updateToNewLocation(WifiInfo wifiInfo, SignalStrength signalStrength, Location location, String locationType) {
+    public void updateToNewLocation(WifiInfo wifiInfo, SignalStrength signalStrength, Location location, String type) {
 
         Date date = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -265,6 +314,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         rssi = wifiInfo.getRssi();
 
         mTvSignalStrength.setText(String.format("signal  strength： GSM %d          WIFI %d",dbm,rssi));
+        //判断当前信号强度，根据信号强度决定采用模式
+        if (type.equals(LocationManager.NETWORK_PROVIDER)){
+            if (rssi < -96){
+                locationType = LocationManager.GPS_PROVIDER;
+                return;
+            }
+        }
+        if (type.equals(LocationManager.GPS_PROVIDER)){
+            if (location == null && rssi > -96){
+                locationType = LocationManager.NETWORK_PROVIDER;
+                return;
+            }
+        }
         if (location != null) {
             double latitude = location.getLatitude();
             double longitude = location.getLongitude();
@@ -361,23 +423,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         public void run() {
                             Log.e("luo", "locationType--->:" + locationType);
                             mTvQuene.setText(LonLatQueue.toString());
-                            if (wifiCount == 5){
-                                mBtnGps.performClick();
-                                return;
-                            }else if (gpsCount == 3){
-                                mBtnWifi.performClick();
-                                return;
-                            }
+//                            if (wifiCount == 5){
+//                                mBtnGps.performClick();
+//                                return;
+//                            }else if (gpsCount == 3){
+//                                mBtnWifi.performClick();
+//                                return;
+//                            }
                             updateToNewLocation(wifiInfo, signalStrength, location, locationType);
-                            if (LocationManager.GPS_PROVIDER.equals(locationType)){
-                                gpsCount++;
-                            }else if (LocationManager.NETWORK_PROVIDER.equals(locationType)){
-                                wifiCount++;
-                            }
+//                            if (LocationManager.GPS_PROVIDER.equals(locationType)){
+//                                gpsCount++;
+//                            }else if (LocationManager.NETWORK_PROVIDER.equals(locationType)){
+//                                wifiCount++;
+//                            }
                         }
                     });
 //                    }
-                    Thread.sleep(3000);
+                    Thread.sleep(1000);
                 }
 
 

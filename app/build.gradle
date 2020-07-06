@@ -5,6 +5,9 @@ android {
     defaultConfig {
         applicationId "cn.com.test.testlocation"
         minSdkVersion 19
+        // 目标sdk版本<29，文件读写在Android10上可正常使用；
+        // 目标sdk版本=29，若覆盖安装（目标sdk版本从<29升到29），则Android10上可正常读写；
+        //                若卸载后再安装，则Android10上不能读写，需要使用存储访问框架；
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"

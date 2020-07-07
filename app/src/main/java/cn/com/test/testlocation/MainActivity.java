@@ -35,6 +35,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -62,12 +64,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private Button mBtnReset;
     private Button mBtnStart;
-    private Button mBtnWifi;
-    private Button mBtnGps;
+    private ImageView mBtnWifi;
+    private ImageView mBtnGps;
 
 
     private TextView mTvQuene;
     private TextView mTvSignalStrength;
+    private EditText mEtLimitRssi;
 
     private ExecutorService mExecutor = null;
     public static volatile String locationType = LocationManager.NETWORK_PROVIDER;
@@ -104,10 +107,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initView() {
         mBtnReset = (Button) findViewById(R.id.btn_reset);
         mBtnStart = (Button) findViewById(R.id.btn_start);
-        mBtnWifi = (Button) findViewById(R.id.btn_wifi);
-        mBtnGps = (Button) findViewById(R.id.btn_gps);
+        mBtnWifi = (ImageView) findViewById(R.id.btn_wifi);
+        mBtnGps = (ImageView) findViewById(R.id.btn_gps);
         mTvSignalStrength = findViewById(R.id.tv_signal_strength);
         mTvQuene = (TextView) findViewById(R.id.tv_quene);
+        mEtLimitRssi = (EditText) findViewById(R.id.et_limit_rssi);
         locationListener1 = new locationListener1();
         mExecutor = Executors.newSingleThreadExecutor();
         mBtnReset.setOnClickListener(this);
@@ -272,7 +276,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                Thread thNetwork=new Thread(fuNetwork,"我是fu线程");
 //                thNetwork.start();
 
-                showToast(mBtnWifi.getText().toString());
+                showToast("get wifi location");
 
                 break;
             case R.id.btn_gps:
@@ -286,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                locationManager.requestLocationUpdates(locationType, 1000, 0, new locationListener1());
 //                LocationProcessor locationProcessorGps =new LocationProcessor(this);
 //                locationProcessorGps.addDownloadTask();
-                showToast(mBtnGps.getText().toString());
+                showToast("Get GPS location");
                 break;
         }
     }
@@ -314,15 +318,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         rssi = wifiInfo.getRssi();
 
         mTvSignalStrength.setText(String.format("signal  strength： GSM %d          WIFI %d",dbm,rssi));
+        String num = mEtLimitRssi.getText().toString();
+        int rssiThreshold = -96;
+        if (!num.isEmpty() && !num.equals("-")){
+            rssiThreshold = Integer.parseInt(num);
+        }
         //判断当前信号强度，根据信号强度决定采用模式
         if (type.equals(LocationManager.NETWORK_PROVIDER)){
-            if (rssi < -96){
+            if (rssi < rssiThreshold){
                 locationType = LocationManager.GPS_PROVIDER;
                 return;
             }
         }
         if (type.equals(LocationManager.GPS_PROVIDER)){
-            if (location == null && rssi > -96){
+            if (location == null && rssi > rssiThreshold){
                 locationType = LocationManager.NETWORK_PROVIDER;
                 return;
             }

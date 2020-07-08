@@ -37,6 +37,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -91,6 +92,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private String permissionInfo;
 
+    private Switch sw;
+
     LocationTask locationTask;
     Thread th;
 
@@ -112,13 +115,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mTvSignalStrength = findViewById(R.id.tv_signal_strength);
         mTvQuene = (TextView) findViewById(R.id.tv_quene);
         mEtLimitRssi = (EditText) findViewById(R.id.et_limit_rssi);
+        sw = findViewById(R.id.sw);
         locationListener1 = new locationListener1();
         mExecutor = Executors.newSingleThreadExecutor();
         mBtnReset.setOnClickListener(this);
         mBtnStart.setOnClickListener(this);
         mBtnWifi.setOnClickListener(this);
         mBtnGps.setOnClickListener(this);
-
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 ////        openGPS(this);
@@ -319,21 +322,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mTvSignalStrength.setText(String.format("signal  strength： GSM %d          WIFI %d",dbm,rssi));
         String num = mEtLimitRssi.getText().toString();
-        int rssiThreshold = -96;
-        if (!num.isEmpty() && !num.equals("-")){
-            rssiThreshold = Integer.parseInt(num);
-        }
-        //判断当前信号强度，根据信号强度决定采用模式
-        if (type.equals(LocationManager.NETWORK_PROVIDER)){
-            if (rssi < rssiThreshold){
-                locationType = LocationManager.GPS_PROVIDER;
-                return;
+        if (sw.isChecked()) {
+            int rssiThreshold = -96;
+            if (!num.isEmpty() && !num.equals("-")) {
+                rssiThreshold = Integer.parseInt(num);
             }
-        }
-        if (type.equals(LocationManager.GPS_PROVIDER)){
-            if (location == null && rssi > rssiThreshold){
-                locationType = LocationManager.NETWORK_PROVIDER;
-                return;
+            //判断当前信号强度，根据信号强度决定采用模式
+            if (type.equals(LocationManager.NETWORK_PROVIDER)) {
+                if (rssi < rssiThreshold) {
+                    locationType = LocationManager.GPS_PROVIDER;
+                    return;
+                }
+            }
+            if (type.equals(LocationManager.GPS_PROVIDER)) {
+                if (location == null && rssi > rssiThreshold) {
+                    locationType = LocationManager.NETWORK_PROVIDER;
+                    return;
+                }
             }
         }
         if (location != null) {
